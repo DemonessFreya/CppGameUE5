@@ -8,6 +8,7 @@
 #include "EngineUtils.h" // For TActorIterator
 #include "CppGameCharacter.h" // For player character
 #include "CppGameSaveTransformComponent.h" // For saving/loading transforms
+#include "Misc/Paths.h" // For FPaths
 
 ACppGameGameMode::ACppGameGameMode()
 {
@@ -128,4 +129,43 @@ void ACppGameGameMode::ReportScore(int newScore)
 FVector ACppGameGameMode::GetLastSavedPlayerLocation() const
 {
 	return LastPlayerSavedLocation;
+}
+
+// Create a sub directory dedicated to our save data, followed by name and extension
+FString ACppGameGameMode::CreateSaveFilePath(const FString& saveName) const
+{
+	return FPaths::ProjectSavedDir() + "SaveJson/" + saveName + TEXT(".json.sav");
+}
+
+bool ACppGameGameMode::SaveGameToJSONFile(UCppGameSaveGame* saveGameObject, const FString saveName)
+{
+	// Create JSON object
+	TSharedPtr<FJsonObject> saveJson = MakeShareable(new FJsonObject());
+	// Write JSON properties
+	saveJson->SetNumberField(TEXT("Highscore"), saveGameObject->HighScore);
+	saveJson->SetStringField(TEXT("LastPlayerLocation"), saveGameObject->LastPlayerLocation.ToString());
+
+	TArray<TSharedPtr<FJsonValue>> jsonTransformValues;
+	for (auto& transformPair : saveGameObject->SaveTransformsByName)
+	{
+		TSharedPtr<FJsonObject> saveTransform = MakeShareable(new FJsonObject());
+
+		saveTransform->SetStringField(TEXT("Name"), transformPair.Key);
+		saveTransform->SetStringField(TEXT("Transform"), transformPair.Value.ToString());
+
+		jsonTransformValues.Add(MakeShareable(new FJsonValueObject(saveTransform)));
+	}
+	saveJson->SetArrayField(TEXT("SaveTransformsByName"), jsonTransformValues);
+
+	// Serialise JSON to string for storage
+	FString contents;
+	TSharedRef<TJsonWriter<>> saveWriter = TJsonWriterFactory<>::Create(&contents);
+	FJsonSerializer::Serialize(saveJson.ToSharedRef(), saveWriter);
+
+	// Write JSON string to file
+	const FString saveGamePath = CreateSaveFilePath(saveName);
+	bool saveSuccess = FFileHelper::SaveStringToFile(contents, *saveGamePath);
+
+	// Return whether write was successful
+	return saveSuccess;
 }

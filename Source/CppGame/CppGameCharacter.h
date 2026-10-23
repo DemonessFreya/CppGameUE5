@@ -29,9 +29,6 @@ public:
 	// Function to add points to player
 	void AddPoints(int PointsToAdd);
 
-	// Create a sub directory dedicated to our save data, followed by name and extension
-	FString CreateSaveFilePath(const FString& saveName) const;
-
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* JumpAction;

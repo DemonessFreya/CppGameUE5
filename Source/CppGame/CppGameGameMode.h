@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "CppGameGameMode.generated.h"
 
+class CppGameSaveGame;
+
 /**
  * 
  */
@@ -38,4 +40,10 @@ public:
 
 	// Returns a copy of the player's last saved location
 	FVector GetLastSavedPlayerLocation() const;
+
+	// Create a sub directory dedicated to our save data, followed by name and extension
+	FString CreateSaveFilePath(const FString& saveName) const;
+
+	// Create FJson object and save it to JSON file
+	bool SaveGameToJSONFile(UCppGameSaveGame* saveGameObject, const FString saveName);
 };
