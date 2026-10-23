@@ -4,6 +4,7 @@
 #include "CppGameCharacter.h"
 #include "CppGameGameMode.h"
 #include "EnhancedInputComponent.h" // For enhanced input binding
+#include "Misc/Paths.h" // For FPaths
 
 // Sets default values
 ACppGameCharacter::ACppGameCharacter()
@@ -71,4 +72,10 @@ void ACppGameCharacter::AddPoints(int PointsToAdd)
 			GameMode->ReportScore(PlayerPoints);
 		}
 	}
+}
+
+// Create a sub directory dedicated to our save data, followed by name and extension
+FString ACppGameCharacter::CreateSaveFilePath(const FString& saveName) const
+{
+	return FPaths::ProjectSavedDir() + "SaveJson/" + saveName + TEXT(".json.sav");
 }

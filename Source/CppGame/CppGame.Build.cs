@@ -13,6 +13,9 @@ public class CppGame : ModuleRules
 		// For EnhancedInput
 		PublicDependencyModuleNames.AddRange(new string[] { "EnhancedInput" });
 
+        // For JSON read/write
+        PublicDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities" });
+
         // Uncomment if you are using Slate UI
         // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
