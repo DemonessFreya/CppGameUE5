@@ -25,6 +25,8 @@ void ACppGameCharacter::BeginPlay()
 		if (!isDefaultLocation)
 		{
 			TeleportTo(gameMode->GetLastSavedPlayerLocation(), GetActorRotation());
+
+			ensure(GetActorLocation() == gameMode->GetLastSavedPlayerLocation()); // Ensure the teleportation was successful
 		}
 	}
 }
@@ -50,7 +52,7 @@ void ACppGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("EnhancedInputComponent is missing!"));
+		UE_LOG(LogTemp, Error, TEXT("EnhancedInputComponent is missing!")); // For debugging
 	}
 }
 
@@ -58,7 +60,7 @@ void ACppGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 void ACppGameCharacter::AddPoints(int PointsToAdd)
 {
 	PlayerPoints += PointsToAdd;
-	UE_LOG(LogTemp, Log, TEXT("Player points: %d"), PlayerPoints);
+	UE_LOG(LogTemp, Log, TEXT("Player points: %d"), PlayerPoints); // Log the current player points for debugging
 
 	if (UWorld* World = GetWorld())
 	{

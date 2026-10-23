@@ -28,19 +28,24 @@ void ACppGameGameMode::BeginPlay()
 	{
 		// Copy the saved high score
 		HighScore = mySave->HighScore;
+
 		UE_LOG(LogTemp, Log, TEXT("Loaded high score: %d"), HighScore);
 		LastPlayerSavedLocation = mySave->LastPlayerLocation;
 	}
 
-	if (!mySave->SaveTransformsByName.IsEmpty())
+	if (IsValid(mySave) && !mySave->SaveTransformsByName.IsEmpty()) // If the save is valid AND there are saved transforms
 	{
 		for (TObjectIterator<UCppGameSaveTransformComponent> savedTransforms; savedTransforms; ++savedTransforms)
 		{
-			// Don't load if object is not from a game/PIE world
+			// Don't load if object is not from a game/PIE world or level is different from the current level
 			if (!IsValid(*savedTransforms) || savedTransforms->GetWorld() != GetWorld() || savedTransforms->GetOwner()->GetLevel() != GetLevel())
 			{
 				continue;
 			}
+
+			// A component and its owner should never belong to different worlds
+			check(savedTransforms->GetWorld() == savedTransforms->GetOwner()->GetWorld());
+
 			EWorldType::Type ownerWorldType = savedTransforms->GetOwner()->GetWorld()->WorldType;
 			if (!(ownerWorldType == EWorldType::PIE || ownerWorldType == EWorldType::Game)) continue;
 
@@ -103,7 +108,8 @@ void ACppGameGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		}
 
 		// Save to slot where "SINGLEPLAYER" is the name and 0 is the slot index
-		UGameplayStatics::SaveGameToSlot(mySave, TEXT("SINGLEPLAYER"), 0);
+		//UGameplayStatics::SaveGameToSlot(mySave, TEXT("SINGLEPLAYER"), 0);
+		ensure(UGameplayStatics::SaveGameToSlot(mySave, TEXT("SINGLEPLAYER"), 0)); // Test that the save operation was successful
 	}
 
 	// Call Super class's EndPlay function
