@@ -75,7 +75,7 @@ UCppGameSaveGame* ACppGameGameMode::LoadGame(const FString& saveName)
 			AActor* saveOwner = savedTransforms->GetOwner();
 			ensure(IsValid(saveOwner));
 
-			FString ownerName = saveOwner->GetName();
+			FString ownerName = saveOwner->GetActorLabel();
 			if (FTransform* foundTransform = mySave->SaveTransformsByName.Find(ownerName))
 			{
 				savedTransforms->LoadTransform(*foundTransform);
@@ -122,11 +122,11 @@ bool ACppGameGameMode::SaveGame(const FString& saveName)
 			if (!(ownerWorldType == EWorldType::PIE || ownerWorldType == EWorldType::Game)) { continue; }
 
 			// Associate name with transform information
-			FString ownerName = saveOwner->GetName();
+			FString ownerName = saveOwner->GetActorLabel();
 			FTransform newSaveTransform;
 			savedTransforms->SaveTransfrom(newSaveTransform);
 
-			mySave->SaveTransformsByName.FindOrAdd(saveOwner->GetName(), newSaveTransform);
+			mySave->SaveTransformsByName.FindOrAdd(saveOwner->GetActorLabel(), newSaveTransform);
 		}
 
 		if (UseJSONSaveGame) { SaveGameToJSONFile(mySave, saveName); }
