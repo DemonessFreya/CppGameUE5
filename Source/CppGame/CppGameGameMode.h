@@ -46,4 +46,6 @@ public:
 
 	// Create FJson object and save it to JSON file
 	bool SaveGameToJSONFile(UCppGameSaveGame* saveGameObject, const FString saveName);
+
+	USaveGame* LoadGameFromJSONFile(const FString& saveName);
 };

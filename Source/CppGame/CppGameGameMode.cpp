@@ -169,3 +169,49 @@ bool ACppGameGameMode::SaveGameToJSONFile(UCppGameSaveGame* saveGameObject, cons
 	// Return whether write was successful
 	return saveSuccess;
 }
+
+USaveGame* ACppGameGameMode::LoadGameFromJSONFile(const FString& saveName)
+{
+	// Load JSON string from file
+	const FString saveGamePath = CreateSaveFilePath(saveName);
+
+	FString contents;
+	bool loadSuccess = FFileHelper::LoadFileToString(contents, *saveGamePath);
+
+	// Early exit if failed to load
+	if (!loadSuccess) return nullptr;
+
+	// Create SaveGame and JSON object
+	UCppGameSaveGame* saveGameInstance = Cast<UCppGameSaveGame>(UGameplayStatics::CreateSaveGameObject(UCppGameSaveGame::StaticClass()));
+	TSharedPtr<FJsonObject> saveJson = MakeShareable(new FJsonObject());
+
+	// Parse JSON and write to SaveGame object
+	TSharedRef<TJsonReader<>> saveReader = TJsonReaderFactory<>::Create(contents);
+	if (FJsonSerializer::Deserialize(saveReader, saveJson) && saveJson.IsValid())
+	{
+		saveJson->TryGetNumberField(TEXT("Highscore"), saveGameInstance->HighScore);
+		FString lastPlayerLocation;
+		saveJson->TryGetStringField(TEXT("LastPlayerLocation"), lastPlayerLocation);
+		saveGameInstance->LastPlayerLocation.InitFromString(lastPlayerLocation);
+
+		const TArray<TSharedPtr<FJsonValue>>* saveTransforms;
+		bool hasSaveTransforms = saveJson->TryGetArrayField(TEXT("SaveTransformsByName"), saveTransforms);
+		if (hasSaveTransforms)
+		{
+			for (auto& transformPair : *saveTransforms)
+			{
+				TSharedPtr<FJsonObject> saveTransform = transformPair->AsObject();
+				FString transformName;
+				saveTransform->TryGetStringField(TEXT("Name"), transformName);
+				FString transformValue;
+				saveTransform->TryGetStringField(TEXT("Transform"), transformValue);
+				FTransform transformParsed;
+				transformParsed.InitFromString(transformValue);
+
+				saveGameInstance->SaveTransformsByName.Add(transformName, transformParsed);
+			}
+		}
+	}
+
+	return saveGameInstance;
+}
