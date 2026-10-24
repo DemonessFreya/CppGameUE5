@@ -6,7 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "CppGameGameMode.generated.h"
 
-class CppGameSaveGame;
+class UCppGameSaveGame;
+class USaveGame;
 
 /**
  * 
@@ -42,10 +43,10 @@ public:
 	// This public function should be called whenever the player score changes.
 	void ReportScore(int newScore);
 
-	// Function to load game using native UE SaveGame system
+	// Function to load game using either native UE SaveGame system or our JSON system
 	UCppGameSaveGame* LoadGame(const FString& saveName);
 
-	// Function to save game using native UE SaveGame system
+	// Function to save game using either native UE SaveGame system or our JSON system
 	bool SaveGame(const FString& saveName);
 
 	// Create a sub directory dedicated to our save data, followed by name and extension
