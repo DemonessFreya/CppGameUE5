@@ -126,9 +126,79 @@ void ACppGameGameMode::ReportScore(int newScore)
 	}
 }
 
-FVector ACppGameGameMode::GetLastSavedPlayerLocation() const
+UCppGameSaveGame* ACppGameGameMode::LoadGame(const FString& saveName)
 {
-	return LastPlayerSavedLocation;
+	// Actual save data
+	UCppGameSaveGame* mySave = nullptr;
+	// Intermediate save data object as loaded from file
+	USaveGame* loadSave = nullptr;
+
+	if (UseJSONSaveGame) { loadSave = LoadGameFromJSONFile(saveName); }
+	else { loadSave = UGameplayStatics::LoadGameFromSlot(saveName, 0); }
+
+	mySave = Cast<UCppGameSaveGame>(loadSave);
+
+	// If the save is valid and can be used
+	if (IsValid(mySave))
+	{
+		// Safe to read from properties here
+
+		// Copy saved highscore into our game mode
+		HighScore = mySave->HighScore;
+		LastPlayerSavedLocation = mySave->LastPlayerLocation;
+	}
+
+	return mySave;
+}
+
+bool ACppGameGameMode::SaveGame(const FString& saveName)
+{
+	// Create a copy of the save data
+	USaveGame* newSave = UGameplayStatics::CreateSaveGameObject(UCppGameSaveGame::StaticClass());
+	// Cast it to our save data type
+	UCppGameSaveGame* mySave = Cast<UCppGameSaveGame>(newSave);
+
+	// If the save is valid and can be used
+	if (IsValid(mySave))
+	{
+		// Write the properties we need to share
+
+		// Copy the best highscore into the save data object
+		mySave->HighScore = HighScore;
+		// Save the last player location
+		for (TActorIterator<ACppGameCharacter> player(GetWorld()); player; ++player)
+		{
+			// Skip invalid players
+			if (!IsValid(*player)) return false;
+			mySave->LastPlayerLocation = player->GetActorLocation();
+			break;
+		}
+
+		// Save persistent transforms
+		for (TObjectIterator<UCppGameSaveTransformComponent> savedTransforms; savedTransforms; ++savedTransforms)
+		{
+			// Skip invalid objects
+			if (!IsValid(*savedTransforms) || savedTransforms->GetWorld() != GetWorld()) { continue; }
+			AActor* saveOwner = savedTransforms->GetOwner();
+			ensure(IsValid(saveOwner));
+
+			// Don't load if object is not from a game world
+			EWorldType::Type ownerWorldType = saveOwner->GetWorld()->WorldType;
+			if (!(ownerWorldType == EWorldType::PIE || ownerWorldType == EWorldType::Game)) { continue; }
+
+			// Associate name with transform information
+			FString ownerName = saveOwner->GetName();
+			FTransform newSaveTransform;
+			savedTransforms->SaveTransfrom(newSaveTransform);
+
+			mySave->SaveTransformsByName.FindOrAdd(saveOwner->GetName(), newSaveTransform);
+		}
+
+		if (UseJSONSaveGame) { SaveGameToJSONFile(mySave, saveName); }
+		else { UGameplayStatics::SaveGameToSlot(mySave, saveName, 0); }
+	}
+
+	return true;
 }
 
 // Create a sub directory dedicated to our save data, followed by name and extension
@@ -214,4 +284,9 @@ USaveGame* ACppGameGameMode::LoadGameFromJSONFile(const FString& saveName)
 	}
 
 	return saveGameInstance;
+}
+
+FVector ACppGameGameMode::GetLastSavedPlayerLocation() const
+{
+	return LastPlayerSavedLocation;
 }

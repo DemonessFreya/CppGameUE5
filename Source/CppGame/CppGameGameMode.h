@@ -23,6 +23,10 @@ class CPPGAME_API ACppGameGameMode : public AGameModeBase
 
 	// Store the last player location for saving/loading
 	FVector LastPlayerSavedLocation = FVector::ZeroVector;
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	bool UseJSONSaveGame = true;
 	
 public:
 	ACppGameGameMode(); // Set default classes
@@ -38,8 +42,11 @@ public:
 	// This public function should be called whenever the player score changes.
 	void ReportScore(int newScore);
 
-	// Returns a copy of the player's last saved location
-	FVector GetLastSavedPlayerLocation() const;
+	// Function to load game using native UE SaveGame system
+	UCppGameSaveGame* LoadGame(const FString& saveName);
+
+	// Function to save game using native UE SaveGame system
+	bool SaveGame(const FString& saveName);
 
 	// Create a sub directory dedicated to our save data, followed by name and extension
 	FString CreateSaveFilePath(const FString& saveName) const;
@@ -48,4 +55,7 @@ public:
 	bool SaveGameToJSONFile(UCppGameSaveGame* saveGameObject, const FString saveName);
 
 	USaveGame* LoadGameFromJSONFile(const FString& saveName);
+
+	// Returns a copy of the player's last saved location
+	FVector GetLastSavedPlayerLocation() const;
 };
